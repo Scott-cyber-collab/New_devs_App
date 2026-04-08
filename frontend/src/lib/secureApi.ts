@@ -243,9 +243,9 @@ export class SecureAPIClient {
    * Validate tenant ID format for security
    */
   private isValidTenantId(tenantId: string): boolean {
-    // Check for UUID format (basic validation)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return typeof tenantId === 'string' && tenantId.length > 0 && uuidRegex.test(tenantId);
+    // Accept both UUID format and simple alphanumeric tenant IDs (e.g. "tenant-a")
+    const validIdRegex = /^[a-zA-Z0-9_-]+$/;
+    return typeof tenantId === 'string' && tenantId.length > 0 && validIdRegex.test(tenantId);
   }
 
   /**
