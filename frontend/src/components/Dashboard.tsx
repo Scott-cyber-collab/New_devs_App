@@ -1,16 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { RevenueSummary } from "./RevenueSummary";
+import { SecureAPI } from "../lib/secureApi";
 
-const PROPERTIES = [
-  { id: 'prop-001', name: 'Beach House Alpha' },
-  { id: 'prop-002', name: 'City Apartment Downtown' },
-  { id: 'prop-003', name: 'Country Villa Estate' },
-  { id: 'prop-004', name: 'Lakeside Cottage' },
-  { id: 'prop-005', name: 'Urban Loft Modern' }
-];
+interface Property {
+  id: string;
+  name: string;
+}
 
 const Dashboard: React.FC = () => {
-  const [selectedProperty, setSelectedProperty] = useState('prop-001');
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [selectedProperty, setSelectedProperty] = useState('');
+  const [loadingProperties, setLoadingProperties] = useState(true);
+
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        const data = await SecureAPI.getDashboardProperties();
+        setProperties(data);
+        if (data.length > 0) {
+          setSelectedProperty(data[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to load properties:', err);
+      } finally {
+        setLoadingProperties(false);
+      }
+    };
+    fetchProperties();
+  }, []);
 
   return (
     <div className="p-4 lg:p-6 min-h-full">
@@ -26,7 +43,7 @@ const Dashboard: React.FC = () => {
                   Monthly performance insights for your properties
                 </p>
               </div>
-              
+
               {/* Property Selector */}
               <div className="flex flex-col sm:items-end">
                 <label className="text-xs font-medium text-gray-700 mb-1">Select Property</label>
@@ -34,19 +51,24 @@ const Dashboard: React.FC = () => {
                   value={selectedProperty}
                   onChange={(e) => setSelectedProperty(e.target.value)}
                   className="block w-full sm:w-auto min-w-[200px] px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  disabled={loadingProperties}
                 >
-                  {PROPERTIES.map((property) => (
-                    <option key={property.id} value={property.id}>
-                      {property.name}
-                    </option>
-                  ))}
+                  {loadingProperties ? (
+                    <option>Loading properties...</option>
+                  ) : (
+                    properties.map((property) => (
+                      <option key={property.id} value={property.id}>
+                        {property.name}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
             </div>
           </div>
 
           <div className="space-y-6">
-            <RevenueSummary propertyId={selectedProperty} />
+            {selectedProperty && <RevenueSummary propertyId={selectedProperty} />}
           </div>
         </div>
       </div>
